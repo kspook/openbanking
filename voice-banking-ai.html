@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>AI 음성 뱅킹 — 오픈뱅킹</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body {
+  min-height: 100%;
+  background: #060A14;
+  font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  color: white;
+}
+.app { max-width: 430px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
+
+/* Top Bar */
+.topbar {
+  background: #0A0F1E;
+  padding: 52px 20px 16px;
+  display: flex; align-items: center; gap: 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  flex-shrink: 0;
+}
+.topbar-title { font-size: 17px; font-weight: 600; flex: 1; }
+.ai-pill {
+  background: linear-gradient(135deg, rgba(120,80,255,0.3), rgba(0,180,255,0.3));
+  color: #C0A0FF;
+  font-size: 11px; font-weight: 500;
+  padding: 4px 12px; border-radius: 20px;
+  border: 1px solid rgba(150,100,255,0.3);
+}
+
+/* Body */
+.body { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+
+/* Status */
+.status-bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.07);
+}
+.status-dot { width: 9px; height: 9px; border-radius: 50%; background: #444; flex-shrink: 0; transition: background 0.3s; }
+.status-dot.ready    { background: #00C48C; }
+.status-dot.listening { background: #FF6B35; animation: pulse 1s infinite; }
+.status-dot.speaking  { background: #4B9FFF; animation: pulse 0.8s infinite; }
+.status-dot.thinking  { background: #A855F7; animation: pulse 0.6s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.25} }
+.status-text { font-size: 13px; color: rgba(255,255,255,0.5); }
+
+/* Account Card */
+.acct-card {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px; padding: 16px 18px;
+}
+.acct-label { font-size: 11px; color: rgba(255,255,255,0.4); margin-bottom: 3px; }
+.acct-bank  { font-size: 13px; color: rgba(255,255,255,0.55); margin-bottom: 2px; }
+.acct-num   { font-size: 13px; color: rgba(255,255,255,0.5); font-family: monospace; letter-spacing: 1px; margin-bottom: 10px; }
+.acct-bal   { font-size: 30px; font-weight: 700; color: white; }
+.acct-change { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 4px; }
+
+/* Bubble Area */
+.bubble-area { flex: 1; min-height: 160px; display: flex; flex-direction: column; gap: 8px; }
+.bubble {
+  border-radius: 16px; padding: 12px 16px;
+  font-size: 14px; line-height: 1.6; max-width: 94%;
+}
+.bubble.user {
+  background: rgba(0,100,255,0.28); color: #A8CAFF;
+  align-self: flex-end; border-bottom-right-radius: 4px;
+}
+.bubble.bot {
+  background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.85);
+  align-self: flex-start; border-bottom-left-radius: 4px;
+}
+.bubble.bot.ai-msg { border-left: 2px solid #A855F7; }
+.bubble.thinking-bubble {
+  background: rgba(168,85,247,0.1); color: rgba(200,150,255,0.8);
+  align-self: flex-start; border-bottom-left-radius: 4px;
+  border: 1px solid rgba(168,85,247,0.2);
+  font-size: 13px;
+}
+.typing-dots span {
+  display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+  background: #A855F7; margin: 0 2px;
+  animation: tdot 1.2s infinite;
+}
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes tdot { 0%,80%,100%{transform:translateY(0);opacity:0.4} 40%{transform:translateY(-5px);opacity:1} }
+
+/* TX rows */
+.tx-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.08);
+  font-size: 13px;
+}
+.tx-row:last-child { border-bottom: none; }
+.tx-row-name { color: rgba(255,255,255,0.75); }
+.tx-amt-in  { color: #00C48C; font-weight: 600; }
+.tx-amt-out { color: #FF6B6B; font-weight: 600; }
+
+/* Mic */
+.mic-section { display: flex; flex-direction: column; align-items: center; padding: 6px 0; }
+.mic-btn {
+  width: 82px; height: 82px; border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.13);
+  background: #1B2640;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; position: relative; transition: all 0.2s;
+  -webkit-appearance: none;
+}
+.mic-btn:active { transform: scale(0.95); }
+.mic-btn.listening { background: #E85A2A; border-color: #FF6B35; }
+.mic-btn.speaking  { background: #1A4ECC; border-color: #4B9FFF; }
+.mic-btn.thinking  { background: #5B21B6; border-color: #A855F7; }
+.mic-ring {
+  position: absolute; width: 100%; height: 100%; border-radius: 50%;
+  border: 2px solid rgba(255,107,53,0.5);
+  animation: ring 1.2s ease-out infinite; display: none;
+}
+.mic-btn.listening .mic-ring { display: block; }
+@keyframes ring { 0%{transform:scale(1);opacity:0.9} 100%{transform:scale(1.7);opacity:0} }
+.mic-icon { font-size: 30px; }
+.mic-label { font-size: 12px; color: rgba(255,255,255,0.32); margin-top: 10px; text-align: center; min-height: 18px; }
+
+/* Command Grid */
+.cmd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding-bottom: 28px; }
+.cmd-btn {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 14px; padding: 13px 13px 11px;
+  font-size: 13px; color: rgba(255,255,255,0.7);
+  cursor: pointer; font-family: inherit; text-align: left;
+  transition: background 0.15s;
+  display: flex; flex-direction: column; gap: 5px;
+}
+.cmd-btn:active { background: rgba(255,255,255,0.1); }
+.cmd-icon  { font-size: 18px; color: #4B9FFF; }
+.cmd-label { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.8); }
+.cmd-hint  { font-size: 11px; color: rgba(255,255,255,0.32); }
+
+.divider { font-size: 11px; color: rgba(255,255,255,0.2); text-align: center; letter-spacing: 0.08em; }
+
+/* AI badge */
+.ai-tag {
+  display: inline-block; font-size: 10px; font-weight: 600;
+  background: rgba(168,85,247,0.2); color: #C084FC;
+  padding: 2px 8px; border-radius: 20px; margin-bottom: 6px;
+  border: 1px solid rgba(168,85,247,0.3);
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <div class="topbar-title">AI 음성 뱅킹</div>
+    <div class="ai-pill">✦ Claude AI</div>
+  </div>
+
+  <div class="body">
+
+    <div class="status-bar">
+      <div class="status-dot ready" id="status-dot"></div>
+      <div class="status-text" id="status-text">준비됨 — 마이크를 눌러 말씀하세요</div>
+    </div>
+
+    <div class="acct-card">
+      <div class="acct-label">현재 연결 계좌</div>
+      <div class="acct-bank" id="v-bank">KB국민은행</div>
+      <div class="acct-num"  id="v-num">1002-4587-2391</div>
+      <div class="acct-label">잔액</div>
+      <div class="acct-bal"  id="v-bal">3,842,500원</div>
+      <div class="acct-change" id="v-change">어제보다 ▲ 128,000원</div>
+    </div>
+
+    <div class="bubble-area" id="bubble-area">
+      <div class="ai-tag">✦ Claude AI 연동</div>
+      <div class="bubble bot ai-msg">
+        안녕하세요, 홍길동 님 😊<br>
+        AI 음성 뱅킹 서비스입니다.<br>
+        잔액 조회, 거래내역, 지출 분석 등<br>
+        무엇이든 자유롭게 물어보세요!
+      </div>
+    </div>
+
+    <div class="mic-section">
+      <button class="mic-btn" id="mic-btn" onclick="toggleMic()" aria-label="음성 명령 마이크">
+        <div class="mic-ring"></div>
+        <span class="mic-icon" id="mic-icon">🎤</span>
+      </button>
+      <div class="mic-label" id="mic-label">마이크를 눌러 말씀하세요</div>
+    </div>
+
+    <div class="divider">— 또는 아래 버튼으로 명령 —</div>
+
+    <div class="cmd-grid">
+      <button class="cmd-btn" onclick="runCmd('잔액 알려줘')">
+        <span class="cmd-icon">💰</span>
+        <span class="cmd-label">잔액 조회</span>
+        <span class="cmd-hint">"잔액 알려줘"</span>
+      </button>
+      <button class="cmd-btn" onclick="runCmd('거래내역 알려줘')">
+        <span class="cmd-icon">📋</span>
+        <span class="cmd-label">거래내역</span>
+        <span class="cmd-hint">"거래내역 알려줘"</span>
+      </button>
+      <button class="cmd-btn" onclick="runCmd('이번달 지출 분석해줘')">
+        <span class="cmd-icon">📊</span>
+        <span class="cmd-label">지출 분석</span>
+        <span class="cmd-hint">"지출 분석해줘"</span>
+      </button>
+      <button class="cmd-btn" onclick="runCmd('저축 조언해줘')">
+        <span class="cmd-icon">🏦</span>
+        <span class="cmd-label">저축 조언</span>
+        <span class="cmd-hint">"저축 조언해줘"</span>
+      </button>
+      <button class="cmd-btn" onclick="runCmd('계좌번호 알려줘')">
+        <span class="cmd-icon">💳</span>
+        <span class="cmd-label">계좌번호</span>
+        <span class="cmd-hint">"계좌번호 알려줘"</span>
+      </button>
+      <button class="cmd-btn" onclick="runCmd('도움말')">
+        <span class="cmd-icon">❓</span>
+        <span class="cmd-label">도움말</span>
+        <span class="cmd-hint">"도움말"</span>
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+var bankData = {
+  name: 'KB국민은행',
+  num: '1002-4587-2391',
+  bal: '3,842,500',
+  balNum: 3842500,
+  change: '어제보다 ▲ 128,000원',
+  owner: '홍길동',
+  tx: [
+    { n: '카카오페이 결제', d: '2024-12-01', a: -28500,    dir: 'out' },
+    { n: '급여 입금',       d: '2024-11-30', a: 3200000,   dir: 'in'  },
+    { n: '배달의민족',      d: '2024-11-29', a: -18900,    dir: 'out' },
+    { n: '이체 수신',       d: '2024-11-28', a: 50000,     dir: 'in'  },
+    { n: '편의점 결제',     d: '2024-11-27', a: -4300,     dir: 'out' },
+    { n: '넷플릭스',        d: '2024-11-26', a: -17000,    dir: 'out' },
+    { n: 'ATM 입금',        d: '2024-11-25', a: 100000,    dir: 'in'  },
+  ]
+};
+
+var conversationHistory = [];
+var isSpeaking = false;
+var recognition = null;
+var synth = window.speechSynthesis;
+
+// 시스템 프롬프트
+var SYSTEM_PROMPT = `당신은 중도 실명자를 위한 AI 음성 뱅킹 어시스턴트입니다.
+사용자의 계좌 정보는 다음과 같습니다:
+- 은행: ` + bankData.name + `
+- 계좌번호: ` + bankData.num + `
+- 예금주: ` + bankData.owner + `
+- 현재 잔액: ` + bankData.balNum.toLocaleString() + `원
+- 최근 거래내역:
+` + bankData.tx.map(function(t, i) {
+  return '  ' + (i+1) + '. ' + t.d + ' | ' + t.n + ' | ' + (t.dir === 'in' ? '+' : '') + t.a.toLocaleString() + '원';
+}).join('\n') + `
+
+중요한 지침:
+1. 항상 한국어로 대화하세요.
+2. 답변은 음성으로 읽히므로 간결하고 자연스럽게 말하듯 작성하세요.
+3. 특수문자나 이모지는 최소화하세요.
+4. 금액은 "삼백팔십사만원" 처럼 말로 읽기 좋게 표현하거나 숫자 그대로 써도 됩니다.
+5. 시각 장애인이 사용하는 서비스이므로 따뜻하고 친절하게 응대하세요.
+6. 지출 분석, 저축 조언 등 금융 관련 조언도 제공하세요.`;
+
+function setStatus(state, text) {
+  document.getElementById('status-dot').className = 'status-dot ' + state;
+  document.getElementById('status-text').textContent = text;
+  var btn = document.getElementById('mic-btn');
+  btn.className = 'mic-btn' + (state !== 'ready' ? ' ' + state : '');
+  document.getElementById('mic-icon').textContent =
+    state === 'speaking' ? '🔊' :
+    state === 'thinking' ? '🤔' : '🎤';
+  document.getElementById('mic-label').textContent =
+    state === 'listening' ? '듣고 있습니다... (다시 누르면 중지)' :
+    state === 'speaking'  ? '읽어드리고 있습니다...' :
+    state === 'thinking'  ? 'AI가 생각하고 있습니다...' :
+    '마이크를 눌러 말씀하세요';
+}
+
+function addBubble(text, type, isAI) {
+  var area = document.getElementById('bubble-area');
+  var b = document.createElement('div');
+  b.className = 'bubble ' + type + (isAI ? ' ai-msg' : '');
+  b.textContent = text;
+  area.appendChild(b);
+  area.scrollTop = area.scrollHeight;
+  return b;
+}
+
+function addThinkingBubble() {
+  var area = document.getElementById('bubble-area');
+  var b = document.createElement('div');
+  b.className = 'bubble thinking-bubble';
+  b.innerHTML = 'AI 분석 중 <span class="typing-dots"><span></span><span></span><span></span></span>';
+  b.id = 'thinking-bubble';
+  area.appendChild(b);
+  area.scrollTop = area.scrollHeight;
+}
+
+function removeThinkingBubble() {
+  var b = document.getElementById('thinking-bubble');
+  if (b) b.remove();
+}
+
+function speak(text, cb) {
+  if (!synth) { if (cb) cb(); return; }
+  synth.cancel();
+  isSpeaking = true;
+  setStatus('speaking', '읽어드리고 있습니다...');
+  var u = new SpeechSynthesisUtterance(text);
+  u.lang = 'ko-KR'; u.rate = 0.92; u.pitch = 1.05;
+  u.onend = function() {
+    isSpeaking = false;
+    setStatus('ready', '준비됨 — 마이크를 눌러 말씀하세요');
+    if (cb) cb();
+  };
+  u.onerror = function() {
+    isSpeaking = false;
+    setStatus('ready', '준비됨');
+    if (cb) cb();
+  };
+  synth.speak(u);
+}
+
+async function askClaude(userMessage) {
+  conversationHistory.push({ role: 'user', content: userMessage });
+
+  setStatus('thinking', 'AI가 생각하고 있습니다...');
+  addThinkingBubble();
+
+  try {
+    var response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: SYSTEM_PROMPT,
+        messages: conversationHistory
+      })
+    });
+
+    var data = await response.json();
+    var reply = data.content && data.content[0] ? data.content[0].text : '죄송합니다, 응답을 받지 못했습니다.';
+
+    conversationHistory.push({ role: 'assistant', content: reply });
+    removeThinkingBubble();
+    addBubble(reply, 'bot', true);
+    speak(reply);
+
+  } catch (err) {
+    removeThinkingBubble();
+    var errMsg = '네트워크 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.';
+    addBubble(errMsg, 'bot', false);
+    speak(errMsg);
+    setStatus('ready', '준비됨');
+  }
+}
+
+function runCmd(cmd) {
+  if (isSpeaking) { synth.cancel(); isSpeaking = false; }
+  addBubble(cmd, 'user', false);
+  askClaude(cmd);
+}
+
+function toggleMic() {
+  if (isSpeaking) { synth.cancel(); isSpeaking = false; setStatus('ready', '준비됨'); return; }
+
+  var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRec) {
+    addBubble('이 브라우저는 음성인식을 지원하지 않습니다. 크롬 브라우저를 사용해 주세요.', 'bot', false);
+    speak('크롬 브라우저를 사용해 주세요.');
+    return;
+  }
+
+  if (!recognition) {
+    recognition = new SpeechRec();
+    recognition.lang = 'ko-KR';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.onresult = function(e) {
+      var t = e.results[0][0].transcript;
+      setStatus('ready', '인식 완료');
+      runCmd(t);
+    };
+    recognition.onerror = function(e) {
+      setStatus('ready', '다시 시도해 주세요');
+      if (e.error === 'not-allowed') {
+        addBubble('마이크 권한이 필요합니다. https 주소에서 열어주세요.', 'bot', false);
+      }
+    };
+    recognition.onend = function() {
+      if (document.getElementById('status-dot').classList.contains('listening')) {
+        setStatus('ready', '준비됨');
+      }
+    };
+  }
+
+  var isListening = document.getElementById('status-dot').classList.contains('listening');
+  if (isListening) {
+    recognition.stop();
+    setStatus('ready', '준비됨 — 마이크를 눌러 말씀하세요');
+  } else {
+    try {
+      recognition.start();
+      setStatus('listening', '듣고 있습니다...');
+    } catch(e) {
+      setStatus('ready', '다시 눌러보세요');
+    }
+  }
+}
+
+// 페이지 로드 시 음성 안내
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    speak('안녕하세요, 홍길동 님. AI 음성 뱅킹 서비스입니다. 무엇이든 자유롭게 물어보세요.');
+  }, 800);
+});
+</script>
+</body>
+</html>
