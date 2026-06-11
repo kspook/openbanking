@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Banking & Welfare Info AI</title>
+    <style>
+        /* 세련된 다크 프리미엄 및 고대비 테마 디자인 */
+        :root {
+            --bg-color: #0d0e12;
+            --card-color: #161820;
+            --primary-gold: #ffcc00;
+            --neon-gold: #ffd700;
+            --text-main: #ffffff;
+            --text-sub: #989ca8;
+            --border-color: #2b2e3a;
+            --active-green: #00ffcc;
+        }
+
+        body {
+            font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: var(--card-color);
+            padding: 35px 30px;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255,255,255,0.1);
+            text-align: center;
+            width: 100%;
+            max-width: 440px;
+            border: 2px solid var(--border-color);
+            position: relative;
+        }
+
+        h1 {
+            color: var(--primary-gold);
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        h1::before {
+            content: '';
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background-color: var(--primary-gold);
+            border-radius: 50%;
+            box-shadow: 0 0 12px var(--neon-gold);
+        }
+
+        .status-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--text-sub);
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .status-dot.active {
+            background-color: var(--active-green);
+            box-shadow: 0 0 10px var(--active-green);
+        }
+
+        .status {
+            font-size: 16px;
+            color: var(--text-sub);
+            font-weight: 600;
+        }
+
+        .display {
+            background-color: #050608;
+            padding: 25px;
+            border-radius: 16px;
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 25px;
+            border: 2px solid var(--primary-gold);
+            white-space: pre-line;
+            line-height: 1.6;
+            letter-spacing: -0.3px;
+            box-shadow: inset 0 4px 12px rgba(0,0,0,0.8);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--neon-gold), #e6b800);
+            color: #000000;
+            border: none;
+            padding: 18px 30px;
+            font-size: 22px;
+            font-weight: 800;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            box-sizing: border-box;
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.35);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn:disabled {
+            background: #2b2e3a;
+            color: #5d616f;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .help-text {
+            margin-top: 25px;
+            font-size: 14px;
+            color: var(--text-sub);
+            text-align: left;
+            line-height: 1.7;
+            border-top: 1px solid var(--border-color);
+            padding-top: 20px;
+        }
+
+        .help-text strong {
+            color: var(--primary-gold);
+            font-size: 15px;
+            display: block;
+            margin-bottom: 6px;
+        }
+        
+        .help-group {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>보이스 스마트 뱅킹</h1>
+    
+    <div class="status-container">
+        <div class="status-dot" id="statusDot"></div>
+        <div class="status" id="status">버튼을 눌러 시작하세요</div>
+    </div>
+    
+    <div class="display" id="display">안녕하세요.<br>말씀하실 준비가 되면 아래 버튼을 눌러주세요.</div>
+    <button class="btn" id="voiceBtn">음성 인식 시작</button>
+    
+    <div class="help-text">
+        <strong>[이렇게 말씀해 보세요]</strong>
+        <div class="help-group">
+            • <b>금융 서비스:</b> "잔액 얼마 있어?", "백만 원 송금해줘",<br>
+            &nbsp;&nbsp;<b>"거래내역 보여줘"</b>, <b>"저축 컨설팅 조회가 가고 싶어"</b>
+        </div>
+        <div class="help-group">
+            • <b>정부 복지 조회:</b> "장애인 연금", "기초 연금",<br>
+            &nbsp;&nbsp;"의료비 지원", "교통 지원", "긴급복지"
+        </div>
+    </div>
+</div>
+
+<script>
+    const voiceBtn = document.getElementById('voiceBtn');
+    const statusDiv = document.getElementById('status');
+    const statusDot = document.getElementById('statusDot');
+    const displayDiv = document.getElementById('display');
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const speechSynthesis = window.speechSynthesis;
+
+    // 2026 데이터가 적용된 복지 및 조회 통합 데이터베이스
+    const bankingDatabase = {
+        welfareHandicap: {
+            voice: "2026년 기준 중증장애인 연금은 월 최대 43만 9,700원이며, 저소득 장애아동수당은 월 최대 22만 원입니다.",
+            screen: "[장애인 연금/수당]\n• 중증장애인: 월 최대 439,700원\n• 장애아동수당: 월 최대 220,000원\n• 신청: 주소지 주민센터"
+        },
+        welfareSenior: {
+            voice: "2026년 기준 만 65세 이상 소득 하위 70% 어르신께 단독가구 기준 월 최대 34만 9,700원을 지급합니다.",
+            screen: "[노인 기초연금]\n• 대상: 만 65세 이상 (하위 70%)\n• 금액: 단독가구 월 최대 349,700원\n• 부부가구 동시 수급 시 20% 감액"
+        },
+        welfareMedical: {
+            voice: "취약계층 건강보험 본인부담금 감면 및 희귀난치성 질환자 치료비 지원 제도를 운영하고 있습니다.",
+            screen: "[의료비 지원]\n• 차상위 희귀질환자 본인부담 면제\n• 노인 안검진 및 개안수술비 지원\n• 문의: 국민건강보험공단"
+        },
+        welfareTraffic: {
+            voice: "장애인 콜택시 바우처 지원 및 만 65세 이상 어르신을 위한 지하철 100% 무임승차 제도가 운영 중입니다.",
+            screen: "[교통/이동 지원]\n• 교통약자 전용 콜택시 이용료 지원\n• 만 65세 이상 도시철도 무임승차\n• 무임 교통카드 주민센터 발급"
+        },
+        welfareEmergency: {
+            voice: "생계 곤란 등 위기 상황 발생 시 1인 가구 기준 약 80만 원의 생계비와 최대 300만 원의 의료비를 즉시 지원합니다.",
+            screen: "[긴급복지 지원]\n• 위기상황 발생 시 생계비 즉시 지급\n• 의료지원: 최대 300만 원 범위 내\n• 신청: 보건복지상담센터 129"
+        },
+        // 추가 요청 반영 파트
+        history: {
+            voice: "최근 거래내역입니다. 6월 11일 한국마트에서 3만 5천 원이 결제되었고, 6월 10일 월급 320만 원이 입금되었습니다.",
+            screen: "[최근 거래내역]\n• 06/11 한국마트 -35,000원\n• 06/10 주식회사 월급 +3,200,000원\n• 06/08 대중교통 -1,250원"
+        },
+        consulting: {
+            voice: "고객님을 위한 맞춤형 저축 컨설팅 결과입니다. 현재 고금리 특판 상품인 시니어 상생 정기예금 연 4.2% 상품을 추천해 드립니다.",
+            screen: "[맞춤형 저축 컨설팅]\n• 추천 상품: 시니어 상생 정기예금\n• 적용 금리: 연 4.2% (우대 포함)\n• 분석: 비과세 종합저축 활용 시 이자소득세 면제 가능"
+        }
+    };
+
+    if (!SpeechRecognition) {
+        statusDiv.innerText = "지원이 되지 않는 브라우저입니다.";
+        voiceBtn.disabled = true;
+    } else {
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'ko-KR';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        voiceBtn.addEventListener('click', () => {
+            if (speechSynthesis.speaking) {
+                speechSynthesis.cancel();
+            }
+            recognition.start();
+        });
+
+        recognition.onstart = () => {
+            statusDiv.innerText = "듣고 있습니다...";
+            statusDot.classList.add('active');
+            voiceBtn.disabled = true;
+            displayDiv.innerText = "말씀해 주세요...";
+        };
+
+        recognition.onerror = (event) => {
+            console.error(event.error);
+            statusDiv.innerText = "에러가 발생했습니다.";
+            statusDot.classList.remove('active');
+            displayDiv.innerText = "다시 시도해 주세요.";
+            voiceBtn.disabled = false;
+        };
+
+        recognition.onend = () => {
+            statusDiv.innerText = "인식 완료";
+            statusDot.classList.remove('active');
+            voiceBtn.disabled = false;
+        };
+
+        recognition.onresult = (event) => {
+            const speechResult = event.results[0][0].transcript.toLowerCase();
+            statusDiv.innerText = `인식결과: "${speechResult}"`;
+            processCommand(speechResult);
+        };
+    }
+
+    function speak(text) {
+        if (speechSynthesis.speaking) {
+            speechSynthesis.cancel();
+        }
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'ko-KR';
+        utterance.rate = 0.93; // 시니어 접근성을 위해 안정감 있는 속도 셋팅
+        speechSynthesis.speak(utterance);
+    }
+
+    // 서비스 제어 및 자연어 분석 매핑 허브
+    function processCommand(command) {
+        // [1] 기존 기본 금융분기
+        if (command.includes('잔액') || command.includes('얼마')) {
+            const reply = "현재 계좌 잔액은 350만 원입니다.";
+            displayDiv.innerText = "[계좌 잔액]\n\n출금 가능 잔액: 3,500,000원";
+            speak(reply);
+        } 
+        else if (command.includes('송금') || command.includes('이체')) {
+            const reply = "송금 단계를 진행합니다. 받으실 분의 은행을 말씀해 주세요.";
+            displayDiv.innerText = "[이체 프로세스]\n\n받으실 은행 정보를 기다리는 중입니다.";
+            speak(reply);
+        }
+        // [2] 신규 추가 기능: 거래내역 조회
+        else if (command.includes('내역') || command.includes('거래') || command.includes('입출금')) {
+            showContent(bankingDatabase.history);
+        }
+        // [3] 신규 추가 기능: 저축 컨설팅 조회
+        else if (command.includes('저축') || command.includes('컨설팅') || command.includes('추천')) {
+            showContent(bankingDatabase.consulting);
+        }
+        // [4] 정부 공개 복지정보 분기
+        else if (command.includes('장애인') || command.includes('수당')) {
+            showContent(bankingDatabase.welfareHandicap);
+        } 
+        else if (command.includes('기초') || command.includes('노인')) {
+            showContent(bankingDatabase.welfareSenior);
+        } 
+        else if (command.includes('의료') || command.includes('병원') || command.includes('치료')) {
+            showContent(bankingDatabase.welfareMedical);
+        } 
+        else if (command.includes('교통') || command.includes('지하철') || command.includes('택시')) {
+            showContent(bankingDatabase.welfareTraffic);
+        } 
+        else if (command.includes('긴급') || command.includes('복지지원')) {
+            showContent(bankingDatabase.welfareEmergency);
+        } 
+        // [5] 예외
+        else {
+            const reply = "잘 이해하지 못했습니다. 잔액조회, 송금, 거래내역, 저축 컨설팅, 또는 정부 복지 메뉴를 다시 말씀해 주세요.";
+            displayDiv.innerText = "죄송합니다. 다시 인식합니다.\n\n안내 멘트를 듣고\n다시 요청해 주세요.";
+            speak(reply);
+        }
+    }
+
+    // 화면과 음성 동시 출력 인터페이스
+    function showContent(targetData) {
+        displayDiv.innerText = targetData.screen;
+        speak(targetData.voice);
+    }
+</script>
+
+</body>
+</html>
