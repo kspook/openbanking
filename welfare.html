@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>시니어·장애인 포용형 보이스 뱅킹 데모</title>
+    <style>
+        /* 고대비 및 대형 텍스트 스타일 (시각장애 및 고령층 최적화) */
+        body {
+            background-color: #000000;
+            color: #FFFFFF;
+            font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            border: 4px solid #FFCC00;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        h1 {
+            color: #FFCC00;
+            font-size: 32px;
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #FFCC00;
+            padding-bottom: 15px;
+        }
+
+        /* 상태 창 및 텍스트 출력 영역 */
+        .display-box {
+            background-color: #111111;
+            border: 3px solid #FFFFFF;
+            padding: 20px;
+            min-height: 200px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 24px;
+            line-height: 1.6;
+            white-space: pre-line; /* 줄바꿈 유지 */
+        }
+
+        .status-tag {
+            color: #FFCC00;
+            font-weight: bold;
+            font-size: 20px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        /* 대형 버튼 메뉴 */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        button {
+            background-color: #222222;
+            color: #FFCC00;
+            border: 3px solid #FFCC00;
+            padding: 20px;
+            font-size: 26px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        button:hover, button:focus {
+            background-color: #FFCC00;
+            color: #000000;
+            outline: none;
+        }
+
+        .btn-home {
+            border-color: #FFFFFF;
+            color: #FFFFFF;
+        }
+
+        /* 음성 파형 애니메이션 효과 */
+        .audio-wave {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            height: 40px;
+            margin-bottom: 15px;
+            visibility: hidden;
+        }
+
+        .audio-wave.active {
+            visibility: visible;
+        }
+
+        .bar {
+            width: 6px;
+            height: 10px;
+            background-color: #FFCC00;
+            animation: bounce 0.5s ease-in-out infinite alternate;
+        }
+        .bar:nth-child(2) { animation-delay: 0.1s; }
+        .bar:nth-child(3) { animation-delay: 0.2s; }
+        .bar:nth-child(4) { animation-delay: 0.3s; }
+        .bar:nth-child(5) { animation-delay: 0.4s; }
+
+        @keyframes bounce {
+            from { height: 10px; }
+            to { height: 40px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>보이스 뱅킹 및 복지 조회</h1>
+
+    <div class="audio-wave" id="wave">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+    </div>
+
+    <div class="display-box">
+        <span class="status-tag" id="status">안내음성</span>
+        <div id="content">안녕하세요. 뱅킹 시스템입니다. 원하시는 서비스를 아래 메뉴 버튼에서 선택하거나 음성을 따라 말씀해 주세요.</div>
+    </div>
+
+    <div class="menu-grid">
+        <button onclick="selectMenu('1')">1번. 장애인 연금/수당</button>
+        <button onclick="selectMenu('2')">2번. 노인 기초연금</button>
+        <button onclick="selectMenu('3')">3번. 의료비 지원</button>
+        <button onclick="selectMenu('4')">4번. 교통/이동 지원</button>
+        <button onclick="selectMenu('5')">5번. 긴급복지 지원</button>
+        <button class="btn-home" onclick="resetToHome()">처음으로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    // 2026 정부 공개 데이터 매핑 데이터베이스
+    const welfareDatabase = {
+        "1": {
+            title: "장애인 연금 및 수당",
+            voiceText: "2026년 기준 중증장애인 연금은 월 최대 43만 9,700원이며, 저소득 장애아동수당은 월 최대 22만 원 지급됩니다.",
+            screenText: "[장애인 연금 및 수당]\n• 중증장애인: 월 최대 439,700원\n• 장애아동수당: 월 최대 220,000원\n• 신청: 주소지 주민센터 방문 신청"
+        },
+        "2": {
+            title: "노인 기초연금",
+            voiceText: "2026년 기준 만 65세 이상 소득 하위 70% 어르신께 단독가구 기준 월 최대 34만 9,700원을 지급합니다.",
+            screenText: "[노인 기초연금]\n• 대상: 만 65세 이상 (소득 하위 70%)\n• 금액: 단독가구 월 최대 349,700원\n• 부부가구 동시 수급 시 20% 감액"
+        },
+        "3": {
+            title: "의료비 지원",
+            voiceText: "취약계층 건강보험 본인부담금 감면 및 희귀난치성 질환자 치료비 지원 제도를 운영 중입니다.",
+            screenText: "[의료비 지원]\n• 차상위 희귀질환자 본인부담 면제\n• 노인 안검진 및 개안수술비 지원\n• 문의: 국민건강보험공단"
+        },
+        "4": {
+            title: "교통 및 이동 지원",
+            voiceText: "장애인 콜택시 바우처 지원 및 만 65세 이상 어르신을 위한 지하철 무임승차 제도가 운영 중입니다.",
+            screenText: "[교통 및 이동 지원]\n• 교통약자 전용 콜택시 이용료 지원\n• 만 65세 이상 도시철도 100% 무임승차\n• 무임 교통카드 주민센터 발급"
+        },
+        "5": {
+            title: "긴급복지 지원",
+            voiceText: "생계 곤란 등 위기 상황 발생 시 1인 가구 기준 약 80만 원의 생계비와 최대 300만 원의 의료비를 즉시 지원합니다.",
+            screenText: "[긴급복지 지원]\n• 생계지원: 긴급 생계비 즉시 지급\n• 의료지원: 최대 300만 원 내 의료비 지원\n• 신청: 보건복지상담센터 국번없이 129"
+        }
+    };
+
+    // 브라우저 내장 TTS(음성합성) 기능 설정
+    const synth = window.speechSynthesis;
+    let currentUtterance = null;
+
+    // 페이지 로드 시 첫 안내 음성 자동 실행 (사용자 상호작용 필요할 수 있음)
+    window.onload = function() {
+        speak("안녕하세요. 뱅킹 시스템입니다. 원하시는 복지 정보의 번호를 누르거나 말씀해 주세요.");
+    };
+
+    // 메뉴 선택 처리 함수
+    function selectMenu(key) {
+        const data = welfareDatabase[key];
+        if (data) {
+            // 화면 텍스트 업데이트 (고대비 가독성 확보)
+            document.getElementById("status").innerText = data.title;
+            document.getElementById("content").innerText = data.screenText;
+            
+            // 음성 출력
+            speak(data.voiceText);
+        }
+    }
+
+    // 처음으로 돌아가기
+    function resetToHome() {
+        const welcomeText = "안녕하세요. 뱅킹 시스템입니다. 원하시는 복지 정보의 번호를 누르거나 말씀해 주세요.";
+        document.getElementById("status").innerText = "안내음성";
+        document.getElementById("content").innerText = welcomeText;
+        speak(welcomeText);
+    }
+
+    // 음성 재생 공통 함수
+    function speak(text) {
+        // 현재 말하고 있는 내용이 있다면 중지
+        if (synth.speaking) {
+            synth.cancel();
+        }
+
+        currentUtterance = new SpeechSynthesisUtterance(text);
+        currentUtterance.lang = 'ko-KR'; // 한국어 설정
+        currentUtterance.rate = 0.9;     // 어르신들을 위해 약간 느린 속도로 조절
+
+        const wave = document.getElementById("wave");
+
+        // 음성 시작 시 애니메이션 활성화
+        currentUtterance.onstart = function() {
+            wave.classList.add("active");
+        };
+
+        // 음성 종료 시 애니메이션 비활성화
+        currentUtterance.onend = function() {
+            wave.classList.remove("active");
+        };
+
+        synth.speak(currentUtterance);
+    }
+</script>
+
+</body>
+</html>
