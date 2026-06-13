@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hybrid Voice Banking & Welfare AI</title>
+    <style>
+        :root {
+            --bg-color: #0d0e12;
+            --card-color: #161820;
+            --primary-gold: #ffcc00;
+            --neon-gold: #ffd700;
+            --text-main: #ffffff;
+            --text-sub: #989ca8;
+            --border-color: #2b2e3a;
+            --active-mic: #ff3366;
+            --focus-blue: #007aff;
+        }
+
+        body {
+            font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: var(--card-color);
+            padding: 30px;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            text-align: center;
+            width: 100%;
+            max-width: 460px;
+            border: 2px solid var(--border-color);
+        }
+
+        /* 상단 모드 인디케이터 */
+        .mode-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            background-color: #050608;
+            padding: 10px 15px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .mode-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--text-sub);
+        }
+
+        .mode-badge {
+            background-color: #222;
+            color: var(--primary-gold);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 800;
+            border: 1px solid var(--primary-gold);
+        }
+
+        .mode-badge.mic-on {
+            color: #ffffff;
+            background-color: var(--active-mic);
+            border-color: var(--active-mic);
+            animation: pulse 1.5s infinite;
+        }
+
+        /* 고대비 대형 디스플레이 */
+        .display {
+            background-color: #050608;
+            padding: 25px;
+            border-radius: 16px;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            border: 2px solid var(--primary-gold);
+            white-space: pre-line;
+            line-height: 1.5;
+            box-shadow: inset 0 4px 12px rgba(0,0,0,0.8);
+        }
+
+        /* 1트랙: 가상 스크린리더 터치 탐색 메뉴 그리드 */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        /* 실제 스크린리더가 초점을 맞춘 듯한 스타일링 */
+        .touch-btn {
+            background-color: #1f222e;
+            color: #ffffff;
+            border: 2px solid var(--border-color);
+            padding: 18px 10px;
+            font-size: 18px;
+            font-weight: 700;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        /* 가상 포커스 상태 (스크린리더 가상 구현용) */
+        .touch-btn.focused {
+            border-color: var(--focus-blue);
+            box-shadow: 0 0 15px rgba(0, 122, 255, 0.6);
+            background-color: #1a293d;
+        }
+
+        /* 2트랙: 미래형 거대 자유 대화 마이크 버튼 */
+        .mic-btn {
+            background: linear-gradient(135deg, #ff3366, #ff0044);
+            color: #ffffff;
+            border: none;
+            padding: 22px 20px;
+            font-size: 24px;
+            font-weight: 800;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            box-sizing: border-box;
+            box-shadow: 0 8px 25px rgba(255, 51, 102, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .mic-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(255, 51, 102, 0.5);
+        }
+
+        .mic-btn:disabled {
+            background: #2b2e3a;
+            color: #5d616f;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .help-caption {
+            margin-top: 15px;
+            font-size: 13px;
+            color: var(--text-sub);
+            text-align: left;
+            line-height: 1.5;
+            background-color: #0d0e12;
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 51, 102, 0.7); }
+            70% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(255, 51, 102, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 51, 102, 0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- 모드 알림 영역 -->
+    <div class="mode-header">
+        <span class="mode-title" id="modeTitle">현재 상태: 터치 탐색 모드</span>
+        <span class="mode-badge" id="modeBadge">1트랙 표준형</span>
+    </div>
+    
+    <!-- 전광판 디스플레이 -->
+    <div class="display" id="display">화면을 한 번 누르면 설명이 나오고, 빠르게 두 번 누르면 실행됩니다.</div>
+    
+    <!-- 1트랙: 물리적 터치 탐색 영역 (시각장애인 가상 스마트폰 UI 환경) -->
+    <div class="menu-grid">
+        <button class="touch-btn" id="btn-bal" onclick="handleTouchMenu('bal')">잔액 조회</button>
+        <button class="touch-btn" id="btn-tx" onclick="handleTouchMenu('tx')">거래 내역</button>
+        <button class="touch-btn" id="btn-senior" onclick="handleTouchMenu('senior')">노인 연금</button>
+        <button class="touch-btn" id="btn-handi" onclick="handleTouchMenu('handi')">장애인 연금</button>
+    </div>
+    
+    <!-- 2트랙: 미래형 자유 대화 인터페이스 시작 버튼 -->
+    <button class="mic-btn" id="micBtn" onclick="startFutureVoiceMode()">
+        🎙️ 미래형 자유 대화 시작
+    </button>
+    
+    <div class="help-caption">
+        <b>💡 데모 시연 가이드</b><br>
+        • <b>1트랙 검증</b>: 위의 4개 버튼을 한 번 클릭하면 초점이 잡히며 읽어만 주고, '더블 클릭'을 해야 금융/복지 조회가 작동합니다.<br>
+        • <b>2트랙 검증</b>: 아래 '자유 대화 시작'을 누른 후 <u>"저축 컨설팅 조회해줘"</u>, <u>"교통 지원 알려줘"</u>, <u>"송금해줘"</u>라고 자유롭게 말씀해 보세요.
+    </div>
+</div>
+
+<script>
+    const displayDiv = document.getElementById('display');
+    const modeTitle = document.getElementById('modeTitle');
+    const modeBadge = document.getElementById('modeBadge');
+    const micBtn = document.getElementById('micBtn');
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const speechSynthesis = window.speechSynthesis;
+
+    // 통합 금융 & 복지 데이터베이스
+    const appDatabase = {
+        bal: { label: "잔액조회 버튼", voice: "현재 출금 가능한 계좌 잔액은 350만 원입니다.", screen: "[계좌 잔액]\n\n출금 가능 잔액:\n3,500,000원" },
+        tx: { label: "거래내역 조회 버튼", voice: "최근 거래내역입니다. 6월 11일 한국마트에서 3만 5천 원이 결제되었습니다.", screen: "[최근 거래내역]\n• 06/11 한국마트 -35,000원\n• 06/10 주식회사 월급 +3,200,000원" },
+        senior: { label: "노인 기초연금 조회 버튼", voice: "2026년 기준 만 65세 이상 소득 하위 70% 어르신께 월 최대 34만 9,700원을 지급합니다.", screen: "[노인 기초연금]\n• 대상: 만 65세 이상\n• 단독가구 기준:\n월 최대 349,700원" },
+        handi: { label: "장애인 연금 조회 버튼", voice: "2026년 기준 중증장애인 연금은 월 최대 43만 9,700원입니다.", screen: "[장애인 연금/수당]\n• 중증장애인:\n월 최대 439,700원\n• 장애아동수당: 220,000원" },
+        consulting: { voice: "고객님 전용 정기예금 금리는 연 4.2% 제공 가능합니다.", screen: "[저축 컨설팅]\n• 추천: 시니어 상생 예금\n• 우대 금리: 연 4.2%" },
+        medical: { voice: "취약계층 건강보험 본인부담금 감면 제도를 안내합니다.", screen: "[의료비 지원]\n• 차상위 희귀질환 면제\n• 노인 안검진 수술비 지원" },
+        traffic: { voice: "장애인 콜택시 바우처 및 만 65세 이상 지하철 무임승차가 가능합니다.", screen: "[교통/이동 지원]\n• 전용 콜택시 이용료 지원\n• 만 65세 이상 무임승차" },
+        emergency: { voice: "위기 상황 발생 시 생계비와 치료비를 즉시 긴급 지원합니다.", screen: "[긴급복지 지원]\n• 1인가구 생계비 지원\n• 문의: 보건복지콜센터 129" }
+    };
+
+    // --- [1트랙 시스템: 실제 시각장애인 스마트폰 스크린리더 제스처 가상 구현] ---
+    let lastClickedId = null;
+    let lastClickTime = 0;
+
+    function handleTouchMenu(menuKey) {
+        const currentTime = new Date().getTime();
+        const targetButton = document.getElementById(`btn-${menuKey}`);
+        const data = appDatabase[menuKey];
+        
+        // 더블 탭(더블 클릭) 감지 알고리즘 (300ms 이내에 같은 버튼을 연달아 눌렀을 때만 실행)
+        if (lastClickedId === menuKey && (currentTime - lastClickTime) < 300) {
+            // 실행 모드
+            displayDiv.innerText = data.screen;
+            speak(data.voice);
+            // 실행 후 포커스 리셋
+            targetButton.classList.remove('focused');
+            lastClickedId = null;
+        } else {
+            // 탐색 모드 (첫 번째 클릭: 실행되지 않고 초점만 잡히며 음성 가이드)
+            lastClickedId = menuKey;
+            lastClickTime = currentTime;
+            
+            // 모든 버튼 포커스 해제 후 해당 버튼만 파란색 스크린리더 테두리 표시
+            document.querySelectorAll('.touch-btn').forEach(btn => btn.classList.remove('focused'));
+            targetButton.classList.add('focused');
+            
+            displayDiv.innerText = `${data.label} 선택됨`;
+            speak(`${data.label}. 선택되었습니다. 실행하려면 빠르게 두 번 누르세요.`);
+        }
+    }
+
+    // --- [2트랙 시스템: 질문자님의 오리지널 아이디어 - 미래형 자유 대화 AI 모드] ---
+    let recognition = null;
+    if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.lang = 'ko-KR';
+        
+        recognition.onstart = () => {
+            modeTitle.innerText = "상태: 음성 명령 듣는 중...";
+            modeBadge.innerText = "2트랙 미래형";
+            modeBadge.classList.add('mic-on');
+            displayDiv.innerText = "듣고 있습니다...\n원하시는 업무를 자유롭게 말씀하세요.";
+            micBtn.disabled = true;
+        };
+
+        recognition.onerror = () => {
+            resetToTrack1("인식 에러가 발생했습니다.");
+        };
+
+        recognition.onend = () => {
+            modeBadge.classList.remove('mic-on');
+            micBtn.disabled = false;
+        };
+
+        recognition.onresult = (event) => {
+            const resultText = event.results[0][0].transcript.toLowerCase();
+            modeTitle.innerText = `인식된 문장: "${resultText}"`;
+            processFutureCommand(resultText);
+        };
+    }
+
+    function startFutureVoiceMode() {
+        if (!recognition) {
+            alert("이 브라우저는 음성 인식을 지원하지 않습니다.");
+            return;
+        }
+        if (speechSynthesis.speaking) speechSynthesis.cancel();
+        recognition.start();
+    }
+
+    function processFutureCommand(command) {
+        // 미래형 대화 해석엔진 (금융 및 5대 복지정보 유기적 처리)
+        if (command.includes('잔액') || command.includes('얼마')) {
+            showVoiceResult("[계좌 잔액]\n\n출금 가능 잔액:\n3,500,000원", appDatabase.bal.voice);
+        } else if (command.includes('내역') || command.includes('거래')) {
+            showVoiceResult(appDatabase.tx.screen, appDatabase.tx.voice);
+        } else if (command.includes('저축') || command.includes('컨설팅') || command.includes('추천')) {
+            showVoiceResult(appDatabase.consulting.screen, appDatabase.consulting.voice);
+        } else if (command.includes('송금') || command.includes('이체')) {
+            showVoiceResult("[이체 프로세스]\n\n받으실 분의 은행을\n말씀해 주세요.", "송금 단계를 진행합니다. 받으실 분의 은행 명을 대화해 주세요.");
+        } else if (command.includes('장애인') || command.includes('수당')) {
+            showVoiceResult(appDatabase.handi.screen, appDatabase.handi.voice);
+        } else if (command.includes('노인') || command.includes('기초연금') || command.includes('어르신')) {
+            showVoiceResult(appDatabase.senior.screen, appDatabase.senior.voice);
+        } else if (command.includes('의료') || command.includes('병원') || command.includes('치료')) {
+            showVoiceResult(appDatabase.medical.screen, appDatabase.medical.voice);
+        } else if (command.includes('교통') || command.includes('지하철') || command.includes('택시')) {
+            showVoiceResult(appDatabase.traffic.screen, appDatabase.traffic.voice);
+        } else if (command.includes('긴급') || command.includes('위기')) {
+            showVoiceResult(appDatabase.emergency.screen, appDatabase.emergency.voice);
+        } else {
+            showVoiceResult("이해하지 못함", "잘 이해하지 못했습니다. 잔액, 송금, 컨설팅이나 정부 복지 메뉴를 다시 말씀해 주세요.");
+        }
+    }
+
+    function showVoiceResult(screenTxt, voiceTxt) {
+        displayDiv.innerText = screenTxt === "이해하지 못함" ? "죄송합니다. 다시 인식합니다.\n\n원하시는 서비스를\n다시 요청해 주세요." : screenTxt;
+        speak(voiceTxt);
+        // 음성 처리가 끝나면 자연스럽게 대기 상태인 1트랙 모드로 복귀
+        setTimeout(() => {
+            modeTitle.innerText = "현재 상태: 터치 탐색 모드";
+            modeBadge.innerText = "1트랙 표준형";
+        }, 1000);
+    }
+
+    function resetToTrack1(errorMsg) {
+        displayDiv.innerText = errorMsg + "\n\n터치 탐색 모드로 대기합니다.";
+        modeTitle.innerText = "현재 상태: 터치 탐색 모드";
+        modeBadge.innerText = "1트랙 표준형";
+        modeBadge.classList.remove('mic-on');
+        micBtn.disabled = false;
+    }
+
+    // 공통 TTS 엔진 내부 스펙 (시니어 최적화 속도)
+    function speak(text) {
+        if (speechSynthesis.speaking) speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'ko-KR';
+        utterance.rate = 0.93; 
+        speechSynthesis.speak(utterance);
+    }
+</script>
+</body>
+</html>
