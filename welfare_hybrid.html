@@ -256,8 +256,8 @@
 <div class="container" role="application" aria-label="하이브리드 음성 뱅킹 및 복지 AI">
     <!-- 모드 알림 영역 -->
     <div class="mode-header">
-        <span class="mode-title" id="modeTitle">현재 상태: 터치 탐색 모드</span>
-        <span class="mode-badge" id="modeBadge">1트랙 표준형</span>
+        <span class="mode-title" id="modeTitle">현재 상태: 터치 작동 중</span>
+        <span class="mode-badge" id="modeBadge">터치 작동 중</span>
     </div>
     
     <!-- 전광판 디스플레이 -->
@@ -275,7 +275,7 @@
     </div>
     
     <!-- 자유 대화 버튼 -->
-    <button class="mic-btn" id="micBtn" onclick="startFutureVoiceMode()" aria-label="미래형 자유 대화 시작. 버튼을 누르고 말씀해주세요">
+    <button class="mic-btn" id="micBtn" onclick="startFutureVoiceMode()" aria-label="자유 대화 시작. 버튼을 누르고 말씀해주세요">
         🎙️ 자유 대화 시작
     </button>
     
@@ -336,7 +336,7 @@
         }
     };
 
-    // --- [1트랙 시스템: 터치 탐색 모드] ---
+    // --- [터치 탐색 모드] ---
     let lastClickedId = null;
     let lastClickTime = 0;
 
@@ -367,7 +367,7 @@
         }
     }
 
-    // --- [2트랙 시스템: 자유 대화 AI 모드] ---
+    // --- [자유 대화 AI 모드] ---
     let recognition = null;
     if (SpeechRecognition) {
         recognition = new SpeechRecognition();
@@ -376,8 +376,8 @@
         recognition.interimResults = false;
         
         recognition.onstart = () => {
-            modeTitle.innerText = "상태: 음성 인식 중...";
-            modeBadge.innerText = "자유 대화 중";
+            modeTitle.innerText = "현재 상태: 음성 인식 중";
+            modeBadge.innerText = "음성 인식 중";
             modeBadge.classList.add('mic-on');
             displayDiv.innerText = "🎤 듣고 있습니다...\n\n원하시는 업무를\n자유롭게 말씀하세요.";
             micBtn.disabled = true;
@@ -441,15 +441,15 @@
         
         // 음성 처리 후 터치 모드로 자동 복귀
         setTimeout(() => {
-            modeTitle.innerText = "현재 상태: 터치 탐색 모드";
-            modeBadge.innerText = "1트랙 표준형";
+            modeTitle.innerText = "현재 상태: 터치 작동 중";
+            modeBadge.innerText = "터치 작동 중";
         }, voiceTxt.length * 100);
     }
 
     function resetToTouchMode(errorMsg) {
-        displayDiv.innerText = errorMsg + "\n\n터치 탐색 모드로 대기합니다.";
-        modeTitle.innerText = "현재 상태: 터치 탐색 모드";
-        modeBadge.innerText = "1트랙 표준형";
+        displayDiv.innerText = errorMsg + "\n\n터치 작동 모드로 대기합니다.";
+        modeTitle.innerText = "현재 상태: 터치 작동 중";
+        modeBadge.innerText = "터치 작동 중";
         modeBadge.classList.remove('mic-on');
         micBtn.disabled = false;
     }
