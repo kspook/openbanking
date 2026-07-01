@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeVoiceAppV0.0006 - 성동구 특화 데모</title>
+    <style>
+        /* 스마트폰 베젤 느낌의 시연용 레이아웃 */
+        body {
+            background-color: #1a1c23;
+            font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .phone-container {
+            width: 390px;
+            height: 844px;
+            background-color: #0d0e12;
+            border-radius: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 8px solid #2b2e3a;
+            padding: 20px;
+            display: flex;
+            flex-direction: space-between;
+            box-sizing: border-box;
+            position: relative;
+        }
+        .inner-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 100%;
+            height: 100%;
+        }
+        /* 상태 헤더 */
+        .mode-header {
+            background-color: #161924;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid #2b2e3a;
+            margin-top: 20px;
+        }
+        .mode-title {
+            color: #ffcc00;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            margin: 0;
+        }
+        /* 🌟 혁신안: 화면의 48%를 차지하는 초대형 정보 디스플레이 */
+        .large-display-box {
+            background-color: #050608;
+            padding: 25px;
+            border-radius: 24px;
+            height: 380px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 3px solid #ffcc00;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        .display-text {
+            color: #ffffff;
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            line-height: 1.7;
+            white-space: pre-line;
+        }
+        /* 🎙️ 초대형 하단 마이크 버튼 */
+        .mega-mic-btn {
+            background-color: #ff3366;
+            padding: 25px 15px;
+            border-radius: 24px;
+            border: 2px solid #ffffff;
+            cursor: pointer;
+            text-align: center;
+            transition: background-color 0.2s;
+            margin-bottom: 20px;
+        }
+        .mega-mic-btn:active {
+            background-color: #dd2255;
+        }
+        .mic-btn-text {
+            color: #ffffff;
+            font-size: 24px;
+            font-weight: bold;
+            display: block;
+        }
+        .mic-sub-text {
+            color: #ffffff;
+            font-size: 12px;
+            margin-top: 8px;
+            opacity: 0.9;
+            display: block;
+        }
+        /* 데모 제어용 우측 시나리오 선택기 (시연 편의용 가상 모듈) */
+        .scenario-selector {
+            position: absolute;
+            right: -220px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: #161924;
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid #2b2e3a;
+            width: 180px;
+            display: none; /* 에이전트 구동 전엔 숨김 */
+        }
+        .scenario-selector.active {
+            display: block;
+        }
+        .scenario-btn {
+            background-color: #2b2e3a;
+            color: #ffffff;
+            border: none;
+            padding: 10px;
+            width: 100%;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            text-align: left;
+        }
+        .scenario-btn:hover {
+            background-color: #3f4358;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="phone-container">
+        <div class="inner-content">
+            <div class="mode-header">
+                <p class="mode-title" id="status-title">🤖 성동구 배리어프리 에이전트 대기 중</p>
+            </div>
+
+            <div class="large-display-box">
+                <p class="display-text" id="display-text">안녕하세요.\n성동구 상생 마이데이터 플랫폼입니다.\n\n하단의 [🎙️ 에이전트 시작] 버튼을 누르고 필요한 금융·복지 업무를 말씀하세요.</p>
+            </div>
+
+            <div class="mega-mic-btn" id="mic-button">
+                <span class="mic-btn-text">🎙️ 에이전트 시작</span>
+                <span class="mic-sub-text">더블 클릭(더블 탭) 시 음성 인식이 켜집니다</span>
+            </div>
+        </div>
+
+        <div class="scenario-selector" id="selector-box">
+            <p style="color: #ffcc00; font-size: 12px; font-weight: bold; margin-top: 0;">🤖 시나리오 강제 선택</p>
+            <button class="scenario-btn" onclick="runSdWelfare()">💰 [복지] 성동구청 보조금</button>
+            <button class="scenario-btn" onclick="runSdTax()">⚖️ [세무] 성동구 비과세</button>
+            <button class="scenario-btn" onclick="runSdMedical()">🏥 [의료] 한양대병원 처방전</button>
+        </div>
+    </div>
+
+    <script>
+        const statusTitle = document.getElementById('status-title');
+        const displayText = document.getElementById('display-text');
+        const selectorBox = document.getElementById('selector-box');
+        const micButton = document.getElementById('mic-button');
+
+        // 순정 웹 브라우저 표준 TTS 엔진 호출 함수
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'ko-KR';
+                utterance.rate = 0.9; // 취약계층용 안정적인 속도
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // AI 에이전트 초기 가동 로직
+        function startSdAgent() {
+            statusTitle.innerText = '🎙️ 성동구 에이전트가 듣고 있습니다...';
+            displayText.innerText = '성동구 복지/금융 통합 마이데이터 분석 중...\n\n목소리를 인식하고 있습니다. 우측의 시나리오 메뉴를 선택해 주세요.';
+            speak("네, 성동구 상생 에이전트입니다. 어떤 금융이나 복지 업무를 도와드릴까요?");
+            selectorBox.classList.add('active');
+        }
+
+        // ① 성동구 미청구 복지 지원금 시나리오
+        function runSdWelfare() {
+            statusTitle.innerText = '💰 성동구 복지 에이전트 작동 중';
+            const msg = "[🎁 성동구청 복지 보조금 감지]\n\n성동구 거주자 마이데이터 분석 결과, 올해 신설된 '성동형 장애인/시니어 안심 교통 바우처' 연 36만 원 미청구 내역을 발견했습니다.\n\n지금 성동구청 대리 신청을 진행할까요?";
+            displayText.innerText = msg;
+            speak("복지 에이전트 분석 결과입니다. 성동구 거주 요건은 충족하셨으나 아직 신청하지 않으신 성동형 안심 교통 바우처 연 36만 원 혜택을 발견했습니다. 음성 동의를 하시면 에이전트가 즉시 대리 청구를 진행합니다. 신청할까요?");
+        }
+
+        // ② 성동구 특화 자산/세무 최적화 시나리오
+        function runSdTax() {
+            statusTitle.innerText = '⚖️ 성동구 세무 에이전트 작동 중';
+            const msg = "[⚖️ 성동구 맞춤 자산 최적화]\n\n현재 일반 계좌에 방치된 자산 중 2,000만 원을 '장애인 우대 비과세 재산형성저축'으로 전환 추천합니다.\n\n연간 세액 62만 원이 즉시 절감되며, 성동구 상생 서포터즈 연계 전문 세무사 매칭이 가능합니다.";
+            displayText.innerText = msg;
+            speak("세무 에이전트 추론 결과입니다. 일반 과세 계좌에 있는 2,000만 원을 장애인 우대 비과세 상품으로 전환 가입하도록 포트폴리오를 재구성했습니다. 연간 62만 원의 세액 감면 혜택이 발생하며, 상세 실행을 위해 성동구 배리어프리 전문 세무 대리인 연계를 원격으로 도와드릴까요?");
+        }
+
+        // ③ 성동구 거점 의료 인프라 연계 시나리오
+        function runSdMedical() {
+            statusTitle.innerText = '🏥 성동구 헬스케어 에이전트 작동 중';
+            const msg = "[🏥 한양대학교병원 스마트 복약 비서]\n\n마이데이터 연동 결과, 지난주 한양대병원에서 처방받으신 혈압약은 아침 식사 직후에 드셔야 안전합니다.\n\n아울러 다음 달 예정된 한양대병원 정기 검진 대리 예약을 실행할까요?";
+            displayText.innerText = msg;
+            speak("헬스케어 에이전트 안내입니다. 마이데이터를 통해 한양대학교병원 처방전 데이터를 분석했습니다. 처방받으신 혈압약은 복용 편의를 위해 아침 식사 직후에 드시기를 권장합니다. 또한, 다음 달 정기 검진 시기가 도래함에 따라 한양대병원 예약을 대리 실행해 둘까요?");
+        }
+
+        // 톡백 미사용자 가이드를 위한 하이브리드 더블클릭(더블탭) 이벤트 바인딩
+        let lastTap = 0;
+        micButton.addEventListener('click', function() {
+            const now = new Date().getTime();
+            const timesince = now - lastTap;
+            if ((timesince < 300) && (timesince > 0)) {
+                startSdAgent();
+            } else {
+                speak("성동구 상생 AI 에이전트 버튼입니다. 대화를 시작하시려면 화면 하단을 빠르게 두 번 누르세요.");
+            }
+            lastTap = now;
+        });
+
+        // 텍스트 초기 줄바꿈 표출 보정
+        displayText.innerText = displayText.innerText.replace(/\\n/g, '\n');
+    </script>
+</body>
+</html>
