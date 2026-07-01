@@ -3,224 +3,282 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SafeVoiceAppV0.0006 - 성동구 특화 데모</title>
+    <title>SafeVoiceApp V0.0008 - 신한은행 제휴 금융/복지 수익모델 데모</title>
     <style>
-        /* 스마트폰 베젤 느낌의 시연용 레이아웃 */
         body {
-            background-color: #1a1c23;
+            background-color: #121318;
             font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
+            gap: 40px;
+            padding: 20px;
+            box-sizing: border-box;
         }
+        /* 스마트폰 시뮬레이터 */
         .phone-container {
             width: 390px;
-            height: 844px;
+            height: 820px;
             background-color: #0d0e12;
             border-radius: 40px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
             border: 8px solid #2b2e3a;
             padding: 20px;
             display: flex;
-            flex-direction: space-between;
-            box-sizing: border-box;
-            position: relative;
-        }
-        .inner-content {
-            display: flex;
             flex-direction: column;
             justify-content: space-between;
-            width: 100%;
-            height: 100%;
+            box-sizing: border-box;
         }
-        /* 상태 헤더 */
         .mode-header {
             background-color: #161924;
-            padding: 15px;
+            padding: 12px;
             border-radius: 12px;
             border: 1px solid #2b2e3a;
-            margin-top: 20px;
         }
         .mode-title {
             color: #ffcc00;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
             text-align: center;
             margin: 0;
         }
-        /* 🌟 혁신안: 화면의 48%를 차지하는 초대형 정보 디스플레이 */
         .large-display-box {
             background-color: #050608;
-            padding: 25px;
+            padding: 20px;
             border-radius: 24px;
-            height: 380px;
+            height: 420px;
             display: flex;
             justify-content: center;
             align-items: center;
             border: 3px solid #ffcc00;
             box-sizing: border-box;
-            overflow-y: auto;
         }
         .display-text {
             color: #ffffff;
-            font-size: 20px;
+            font-size: 19px;
             font-weight: bold;
             text-align: center;
             line-height: 1.7;
             white-space: pre-line;
         }
-        /* 🎙️ 초대형 하단 마이크 버튼 */
         .mega-mic-btn {
             background-color: #ff3366;
-            padding: 25px 15px;
+            padding: 22px 15px;
             border-radius: 24px;
             border: 2px solid #ffffff;
             cursor: pointer;
             text-align: center;
-            transition: background-color 0.2s;
+        }
+        .mic-btn-text { color: #ffffff; font-size: 22px; font-weight: bold; display: block; }
+        .mic-sub-text { color: #ffffff; font-size: 11px; margin-top: 6px; opacity: 0.9; display: block; }
+
+        /* 📊 백엔드 대리 프로세스 모니터 (신한은행 커스텀) */
+        .process-monitor {
+            width: 500px;
+            height: 820px;
+            background-color: #161924;
+            border-radius: 24px;
+            border: 1px solid #2b2e3a;
+            padding: 25px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+        .monitor-title {
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 0;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .monitor-subtitle {
+            color: #a0aec0;
+            font-size: 12px;
             margin-bottom: 20px;
         }
-        .mega-mic-btn:active {
-            background-color: #dd2255;
+        .flow-step {
+            background-color: #1f2334;
+            border-left: 4px solid #4a5568;
+            padding: 12px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 12px;
+            opacity: 0.4;
+            transition: all 0.3s;
         }
-        .mic-btn-text {
-            color: #ffffff;
-            font-size: 24px;
-            font-weight: bold;
-            display: block;
+        .flow-step.active {
+            border-left-color: #3182ce;
+            background-color: #1a2b3c;
+            opacity: 1;
+            transform: scale(1.02);
         }
-        .mic-sub-text {
-            color: #ffffff;
-            font-size: 12px;
-            margin-top: 8px;
-            opacity: 0.9;
-            display: block;
+        .flow-step.revenue {
+            border-left-color: #ecc94b;
+            background-color: #3c351e;
         }
-        /* 데모 제어용 우측 시나리오 선택기 (시연 편의용 가상 모듈) */
-        .scenario-selector {
-            position: absolute;
-            right: -220px;
-            top: 50%;
-            transform: translateY(-50%);
-            background-color: #161924;
-            padding: 20px;
-            border-radius: 16px;
-            border: 1px solid #2b2e3a;
-            width: 180px;
-            display: none; /* 에이전트 구동 전엔 숨김 */
+        .step-num { font-size: 11px; font-weight: bold; color: #a0aec0; display: block; }
+        .flow-step.active .step-num { color: #4299e1; }
+        .flow-step.revenue.active .step-num { color: #ecc94b; }
+        .step-text { color: #e2e8f0; font-size: 13px; font-weight: bold; margin-top: 4px; display: block; }
+        
+        .action-panel {
+            margin-top: auto;
+            background-color: #0d0e12;
+            padding: 15px;
+            border-radius: 12px;
         }
-        .scenario-selector.active {
-            display: block;
+        .action-title { color: #ffcc00; font-size: 12px; font-weight: bold; margin-top:0; margin-bottom:10px; }
+        .action-flex { display: flex; gap: 10px; }
+        .action-btn {
+            flex: 1; background-color: #2b6cb0; color: white; border: none; padding: 12px;
+            border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px;
         }
-        .scenario-btn {
-            background-color: #2b2e3a;
-            color: #ffffff;
-            border: none;
-            padding: 10px;
-            width: 100%;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: bold;
-            text-align: left;
-        }
-        .scenario-btn:hover {
-            background-color: #3f4358;
-        }
+        .action-btn:hover { background-color: #2c5282; }
     </style>
 </head>
 <body>
 
+    <!-- 왼쪽: 시각 취약계층용 모바일 앱 구동 화면 -->
     <div class="phone-container">
-        <div class="inner-content">
-            <div class="mode-header">
-                <p class="mode-title" id="status-title">🤖 성동구 배리어프리 에이전트 대기 중</p>
-            </div>
-
-            <div class="large-display-box">
-                <p class="display-text" id="display-text">안녕하세요.\n성동구 상생 마이데이터 플랫폼입니다.\n\n하단의 [🎙️ 에이전트 시작] 버튼을 누르고 필요한 금융·복지 업무를 말씀하세요.</p>
-            </div>
-
-            <div class="mega-mic-btn" id="mic-button">
-                <span class="mic-btn-text">🎙️ 에이전트 시작</span>
-                <span class="mic-sub-text">더블 클릭(더블 탭) 시 음성 인식이 켜집니다</span>
-            </div>
+        <div class="mode-header">
+            <p class="mode-title" id="status-title">🤖 SafeVoice 신한 금융 코어 대기 중</p>
         </div>
 
-        <div class="scenario-selector" id="selector-box">
-            <p style="color: #ffcc00; font-size: 12px; font-weight: bold; margin-top: 0;">🤖 시나리오 강제 선택</p>
-            <button class="scenario-btn" onclick="runSdWelfare()">💰 [복지] 성동구청 보조금</button>
-            <button class="scenario-btn" onclick="runSdTax()">⚖️ [세무] 성동구 비과세</button>
-            <button class="scenario-btn" onclick="runSdMedical()">🏥 [의료] 한양대병원 처방전</button>
+        <div class="large-display-box">
+            <p class="display-text" id="display-text">안녕하세요.\nSafeVoice 상생 마이데이터 에이전트입니다.\n\n하단의 버튼을 빠르게 두 번(더블 클릭) 누르시면 금융 및 복지 추론을 시작합니다.</p>
+        </div>
+
+        <div class="mega-mic-btn" id="mic-button">
+            <span class="mic-btn-text">🎙️ 에이전트 시작</span>
+            <span class="mic-sub-text">빠르게 두 번 누르면 마이데이터 연동이 시작됩니다</span>
+        </div>
+    </div>
+
+    <!-- 오른쪽: 대리 지원 프로세스 및 BM 모니터 (신한은행 연계형) -->
+    <div class="process-monitor">
+        <div class="monitor-title">📊 백엔드 대리 프로세스 및 수익 모델 모니터</div>
+        <div class="monitor-subtitle">앱 구동 시 백엔드에서 일어나는 실제 공공/금융 API 연동 체계</div>
+
+        <div class="flow-step" id="step1">
+            <span class="step-num">STEP 1. 공공 데이터 스크래핑 및 자격 분석</span>
+            <span class="step-text">🌐 보건복지부(복지로) 및 성동구청 API 가동 <br>→ 거주지(성동구) 및 복지 요건 가치 매칭 분석 완료</span>
+        </div>
+
+        <div class="flow-step" id="step2">
+            <span class="step-num">STEP 2. 신한 오픈 API(Shinhan Open API) 연동</span>
+            <span class="step-text">🏦 신한은행 마이데이터 및 금융 코어 시스템 실시간 조회 <br>→ 유휴 자산 탐색 및 보조금 수령 최적화 계좌 검증</span>
+        </div>
+
+        <div class="flow-step" id="step3">
+            <span class="step-num">STEP 3. AI 에이전트 자율 추론 및 원클릭 대리 청구</span>
+            <span class="step-text">🤖 사용자의 음성 동의 수취 즉시, 지자체 보조금 접수 시스템으로 대리 행정 처리 데이터 암호화 전송</span>
+        </div>
+
+        <div class="flow-step revenue" id="step4">
+            <span class="step-num">💰 STEP 4. [비즈니스 모델] 신한은행 유치 수수료 정산</span>
+            <span class="step-text">📈 신한은행 성동구청지점 연계 계좌로 보조금 수령 지정 완료 → 신한은행으로부터 저원가성 자산 파트너십 유치 수수료 확보</span>
+        </div>
+
+        <div class="action-panel">
+            <div class="action-title">💡 시연용 신한은행 비즈니스 케이스 선택</div>
+            <div class="action-flex">
+                <button class="action-btn" onclick="triggerCase1()">💰 Case 1. 보조금 대리청구 & 신한 연계</button>
+                <button class="action-btn" onclick="triggerCase2()">⚖️ Case 2. 비과세 자산 최적화 중개</button>
+            </div>
         </div>
     </div>
 
     <script>
         const statusTitle = document.getElementById('status-title');
         const displayText = document.getElementById('display-text');
-        const selectorBox = document.getElementById('selector-box');
         const micButton = document.getElementById('mic-button');
 
-        // 순정 웹 브라우저 표준 TTS 엔진 호출 함수
         function speak(text) {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'ko-KR';
-                utterance.rate = 0.9; // 취약계층용 안정적인 속도
+                utterance.rate = 0.9;
                 window.speechSynthesis.speak(utterance);
             }
         }
 
-        // AI 에이전트 초기 가동 로직
-        function startSdAgent() {
-            statusTitle.innerText = '🎙️ 성동구 에이전트가 듣고 있습니다...';
-            displayText.innerText = '성동구 복지/금융 통합 마이데이터 분석 중...\n\n목소리를 인식하고 있습니다. 우측의 시나리오 메뉴를 선택해 주세요.';
-            speak("네, 성동구 상생 에이전트입니다. 어떤 금융이나 복지 업무를 도와드릴까요?");
-            selectorBox.classList.add('active');
+        function resetSteps() {
+            document.querySelectorAll('.flow-step').forEach(el => el.classList.remove('active'));
         }
 
-        // ① 성동구 미청구 복지 지원금 시나리오
-        function runSdWelfare() {
-            statusTitle.innerText = '💰 성동구 복지 에이전트 작동 중';
-            const msg = "[🎁 성동구청 복지 보조금 감지]\n\n성동구 거주자 마이데이터 분석 결과, 올해 신설된 '성동형 장애인/시니어 안심 교통 바우처' 연 36만 원 미청구 내역을 발견했습니다.\n\n지금 성동구청 대리 신청을 진행할까요?";
-            displayText.innerText = msg;
-            speak("복지 에이전트 분석 결과입니다. 성동구 거주 요건은 충족하셨으나 아직 신청하지 않으신 성동형 안심 교통 바우처 연 36만 원 혜택을 발견했습니다. 음성 동의를 하시면 에이전트가 즉시 대리 청구를 진행합니다. 신청할까요?");
+        // Case 1: 신한은행 코어 금융 + 복지 대리청구 프로세스
+        function triggerCase1() {
+            resetSteps();
+            statusTitle.innerText = '💰 신한 금융·복지 통합 에이전트 가동';
+            
+            document.getElementById('step1').classList.add('active');
+            displayText.innerText = "[🔍 성동구청 공공 API 탐색 중]\n\n성동구 시니어 안심 교통 바우처 연 36만 원 미청구 내역 감지.";
+            speak("성동구청 복지 API를 조회하여, 아직 수령하지 않으신 안심 교통 바우처 연 36만 원을 찾아냈습니다.");
+
+            setTimeout(() => {
+                document.getElementById('step2').classList.add('active');
+                displayText.innerText += "\n\n[🏦 신한 오픈 API 마이데이터 분석]\n\n안전 협약 기관인 '신한은행 성동구청지점' 계좌를 보조금 입금 전용 계좌로 매칭합니다.";
+                speak("바우처 대리 신청을 위해 고객님의 신한은행 계좌를 보조금 수령 계좌로 연결합니다.");
+            }, 3000);
+
+            setTimeout(() => {
+                document.getElementById('step3').classList.add('active');
+                displayText.innerText = "[🤖 정부24/복지로 대리청구 완료]\n\n음성 위임을 통해 성동구청 바우처 신청서 접수가 정상 완료되었습니다.\n\n매월 신한은행 계좌로 바우처 분할 입금 예정.";
+                speak("음성 위임이 확인되어 보건복지부 시스템에 대리 청구를 완료했습니다. 보조금은 신한은행 계좌로 안전하게 입금됩니다.");
+            }, 6000);
+
+            setTimeout(() => {
+                document.getElementById('step4').classList.add('active');
+                statusTitle.innerText = '💰 신한은행 정산 완료';
+                speak("제휴 기관인 신한은행으로부터 예금 유치 핵심 기여에 따른 자산 락인 파트너십 수수료가 성공적으로 정산되었습니다.");
+            }, 9000);
         }
 
-        // ② 성동구 특화 자산/세무 최적화 시나리오
-        function runSdTax() {
-            statusTitle.innerText = '⚖️ 성동구 세무 에이전트 작동 중';
-            const msg = "[⚖️ 성동구 맞춤 자산 최적화]\n\n현재 일반 계좌에 방치된 자산 중 2,000만 원을 '장애인 우대 비과세 재산형성저축'으로 전환 추천합니다.\n\n연간 세액 62만 원이 즉시 절감되며, 성동구 상생 서포터즈 연계 전문 세무사 매칭이 가능합니다.";
-            displayText.innerText = msg;
-            speak("세무 에이전트 추론 결과입니다. 일반 과세 계좌에 있는 2,000만 원을 장애인 우대 비과세 상품으로 전환 가입하도록 포트폴리오를 재구성했습니다. 연간 62만 원의 세액 감면 혜택이 발생하며, 상세 실행을 위해 성동구 배리어프리 전문 세무 대리인 연계를 원격으로 도와드릴까요?");
+        // Case 2: 비과세 자산 최적화 전문직 중개 모델
+        function triggerCase2() {
+            resetSteps();
+            statusTitle.innerText = '⚖️ 자산 최적화 에이전트 가동';
+            
+            document.getElementById('step2').classList.add('active');
+            displayText.innerText = "[🏦 신한 마이데이터 자산 스캔]\n\n현재 신한은행 일반 과세 예금 계좌에 2,000만 원 확인.\n세율 15.4% 적용 중.";
+            speak("금융 마이데이터 분석 결과, 현재 신한은행 일반 계좌에 방치된 이천만 원에 대해 과세 혜택을 받지 못하고 계십니다.");
+
+            setTimeout(() => {
+                document.getElementById('step1').classList.add('active');
+                displayText.innerText += "\n\n[🔍 성동구 장애인 세제 혜택 매칭]\n\n'장애인 우대 비과세 재산형성저축' 가입 자격 요건 충족 확인. 연 62만 원 절세 가능.";
+                speak("성동구 복지 가이드라인 확인 결과, 비과세 저축 전환 시 연간 육십이만 원의 세금을 즉시 아낄 수 있습니다.");
+            }, 3000);
+
+            setTimeout(() => {
+                document.getElementById('step3').classList.add('active');
+                displayText.innerText = "[🤖 배리어프리 세무 법인 대리 매칭]\n\n복잡한 국세청 비과세 증빙 서류 발급 및 세무 신고 업무를 성동구 거점 제휴 세무사에게 대리 위임합니다.";
+                speak("복잡한 국세청 서류 제출을 위해 우리 플랫폼의 제휴 전문 세무사 대리 매칭 프로세스를 시작합니다.");
+            }, 6000);
+
+            setTimeout(() => {
+                document.getElementById('step4').classList.add('active');
+                statusTitle.innerText = '💰 중개 수수료 매출 발생';
+                document.getElementById('step4').querySelector('.step-text').innerHTML = "⚖️ [비즈니스 모델] 제휴 세무 법인 서비스 연계 완료 <br>→ 세무 대리 중개 수수료 건당 50,000원 수취 완료";
+                speak("세무 대리 매칭이 성공하여, 제휴 세무 법인으로부터 플랫폼 중개 수수료가 정산되었습니다.");
+            }, 9000);
         }
 
-        // ③ 성동구 거점 의료 인프라 연계 시나리오
-        function runSdMedical() {
-            statusTitle.innerText = '🏥 성동구 헬스케어 에이전트 작동 중';
-            const msg = "[🏥 한양대학교병원 스마트 복약 비서]\n\n마이데이터 연동 결과, 지난주 한양대병원에서 처방받으신 혈압약은 아침 식사 직후에 드셔야 안전합니다.\n\n아울러 다음 달 예정된 한양대병원 정기 검진 대리 예약을 실행할까요?";
-            displayText.innerText = msg;
-            speak("헬스케어 에이전트 안내입니다. 마이데이터를 통해 한양대학교병원 처방전 데이터를 분석했습니다. 처방받으신 혈압약은 복용 편의를 위해 아침 식사 직후에 드시기를 권장합니다. 또한, 다음 달 정기 검진 시기가 도래함에 따라 한양대병원 예약을 대리 실행해 둘까요?");
-        }
-
-        // 톡백 미사용자 가이드를 위한 하이브리드 더블클릭(더블탭) 이벤트 바인딩
         let lastTap = 0;
         micButton.addEventListener('click', function() {
             const now = new Date().getTime();
-            const timesince = now - lastTap;
-            if ((timesince < 300) && (timesince > 0)) {
-                startSdAgent();
+            if ((now - lastTap < 300) && (now - lastTap > 0)) {
+                triggerCase1();
             } else {
-                speak("성동구 상생 AI 에이전트 버튼입니다. 대화를 시작하시려면 화면 하단을 빠르게 두 번 누르세요.");
+                speak("SafeVoice 신한 금융 에이전트입니다. 대화를 시작하시려면 빠르게 두 번 누르시거나, 우측 실전 케이스 버튼을 클릭하세요.");
             }
             lastTap = now;
         });
 
-        // 텍스트 초기 줄바꿈 표출 보정
         displayText.innerText = displayText.innerText.replace(/\\n/g, '\n');
     </script>
 </body>
